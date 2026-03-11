@@ -39,10 +39,10 @@ This skill auto-activates when you ask Claude about:
 
 | File | Covers |
 |---|---|
-| [`SKILL.md`](skills/remotion-transitions/SKILL.md) | Entry point, golden rules, quick reference |
-| [`custom-transition-pattern.md`](skills/remotion-transitions/references/custom-transition-pattern.md) | `TransitionPresentation` scaffold, `linearTiming` vs `springTiming`, stagger formula, common gotchas |
-| [`transition-catalog.md`](skills/remotion-transitions/references/transition-catalog.md) | Full TypeScript source for all 6 transitions with customization tips |
-| [`animation-math.md`](skills/remotion-transitions/references/animation-math.md) | Easing functions, decaying oscillation, spring configs, `clamp` pattern, frame budget formula, responsive scaling |
+| [`SKILL.md`](SKILL.md) | Entry point, golden rules, quick reference |
+| [`custom-transition-pattern.md`](references/custom-transition-pattern.md) | `TransitionPresentation` scaffold, `linearTiming` vs `springTiming`, stagger formula, common gotchas |
+| [`transition-catalog.md`](references/transition-catalog.md) | Full TypeScript source for all transitions with customization tips |
+| [`animation-math.md`](references/animation-math.md) | Easing functions, decaying oscillation, spring configs, `clamp` pattern, frame budget formula, responsive scaling |
 
 ## Requirements
 
