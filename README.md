@@ -20,12 +20,15 @@ Once listed on the marketplace:
 /plugin install remotion-transitions
 ```
 
-Until then, clone and install locally:
+Until then, install via skills.sh:
+```bash
+npx skills add ashad001/remotion-transitions
+```
+
+Or clone manually:
 ```bash
 git clone https://github.com/ashad001/remotion-transitions
 ```
-
-Then add the skill files from `skills/remotion-transitions/` to your local `~/.claude/skills/` directory.
 
 ## Skill triggers
 
@@ -50,6 +53,10 @@ This skill auto-activates when you ask Claude about:
 - `@remotion/transitions` ≥ 4.0
 - React 18+
 - TypeScript (recommended)
+
+## Landing page
+
+The landing page lives in a separate repo: [ashad001/remotion-transitions-landing](https://github.com/ashad001/remotion-transitions-landing), deployed on Vercel.
 
 ## License
 

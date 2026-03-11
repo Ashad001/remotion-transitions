@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "remotion-transitions": {
+      "source": "Ashad001/remotion-transitions",
+      "sourceType": "github",
+      "computedHash": "bcddf1de7d483bf8620e7747c57a1eed82795954eaf2f604dfab3a6c1264a313"
+    }
+  }
+}
