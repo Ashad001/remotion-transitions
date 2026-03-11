@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>remotion-transitions — Build Remotion transitions that feel alive</title>
+  <meta name="description" content="A Claude Code skill for building custom Remotion scene transitions — TransitionPresentation API, animation math, and production-ready patterns for short-form video.">
+  <meta property="og:title" content="remotion-transitions">
+  <meta property="og:description" content="Build custom Remotion scene transitions with Claude Code. TransitionPresentation API, production-ready patterns, animation math.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #070707;
+      --surface:   #0e0e0e;
+      --border:    rgba(255,255,255,0.08);
+      --border-em: rgba(16,185,129,0.24);
+      --em:        #10b981;
+      --em-dim:    rgba(16,185,129,0.1);
+      --white:     #efefef;
+      --sub:       #6b6b6b;
+      --dim:       #333;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Bricolage Grotesque', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* dot grid */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── NAV ──────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 56px; height: 60px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7,7,7,0.9);
+      backdrop-filter: blur(16px);
+    }
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; font-weight: 600;
+      color: var(--white); text-decoration: none;
+    }
+    .nav-logo b { color: var(--em); font-weight: 600; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: var(--sub);
+      text-decoration: none; transition: color 0.18s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .btn-em {
+      color: #000 !important;
+      background: var(--em);
+      padding: 8px 20px; border-radius: 6px;
+      font-weight: 600 !important;
+      transition: opacity 0.18s !important;
+    }
+    .btn-em:hover { opacity: 0.82 !important; }
+
+    /* ─── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      max-width: 1200px; margin: 0 auto;
+      padding: 100px 56px 80px;
+    }
+
+    .hero-left { display: flex; flex-direction: column; }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 600;
+      color: var(--em); letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+      opacity: 0; animation: fadeUp 0.5s 0.2s ease forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 4.8vw, 72px);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      margin-bottom: 24px;
+      opacity: 0; animation: fadeUp 0.6s 0.35s ease forwards;
+    }
+    .hero h1 em { color: var(--em); font-style: normal; }
+
+    .hero-sub {
+      font-size: 16px; font-weight: 400;
+      color: var(--sub); line-height: 1.7;
+      max-width: 440px;
+      margin-bottom: 36px;
+      opacity: 0; animation: fadeUp 0.6s 0.5s ease forwards;
+    }
+
+    .install-pill {
+      display: flex; align-items: stretch;
+      border: 1px solid var(--border-em);
+      border-radius: 10px; overflow: hidden;
+      max-width: 440px;
+      margin-bottom: 14px;
+      opacity: 0; animation: fadeUp 0.6s 0.65s ease forwards;
+    }
+    .pill-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 600;
+      color: var(--em); background: var(--em-dim);
+      padding: 13px 14px; border-right: 1px solid var(--border-em);
+      white-space: nowrap; letter-spacing: 0.1em;
+      display: flex; align-items: center;
+    }
+    .pill-cmd {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; color: var(--white);
+      padding: 13px 16px; flex: 1;
+      display: flex; align-items: center;
+      background: rgba(255,255,255,0.025);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .pill-copy {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--sub);
+      background: transparent; border: none;
+      border-left: 1px solid var(--border);
+      padding: 13px 14px; cursor: pointer;
+      transition: color 0.18s, background 0.18s;
+      display: flex; align-items: center;
+    }
+    .pill-copy:hover { color: var(--em); background: var(--em-dim); }
+    .pill-copy.ok { color: var(--em); }
+
+    .hero-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--dim);
+      opacity: 0; animation: fadeUp 0.6s 0.8s ease forwards;
+    }
+
+    /* right: terminal */
+    .hero-right {
+      opacity: 0; animation: fadeUp 0.7s 0.5s ease forwards;
+    }
+
+    /* ─── TERMINAL ─────────────────────────────────────────────── */
+    .terminal {
+      background: #060606;
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .term-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #0a0a0a;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dr { background: #ff5f57; } .dy { background: #febc2e; } .dg { background: #28c840; }
+    .term-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--sub); margin-left: 8px; }
+    .term-body  {
+      padding: 20px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; line-height: 2.1;
+    }
+    .tp { color: var(--em); } .tc { color: var(--white); }
+    .to { color: var(--sub); } .ts { color: var(--em); }
+    .cursor {
+      display: inline-block; width: 7px; height: 14px;
+      background: var(--em); vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ─── STATS STRIP ──────────────────────────────────────────── */
+    .stats {
+      position: relative; z-index: 1;
+      display: flex;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .stat { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 28px 16px; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 36px; font-weight: 800; color: var(--em); letter-spacing: -0.03em; line-height: 1; margin-bottom: 5px; }
+    .stat-lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; }
+
+    /* ─── SECTION WRAPPER ──────────────────────────────────────── */
+    .sec { position: relative; z-index: 1; padding: 88px 56px; max-width: 1200px; margin: 0 auto; }
+    .sec-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--em); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; }
+    .sec-title { font-size: clamp(28px, 3.5vw, 48px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; color: var(--white); margin-bottom: 44px; }
+
+    /* ─── TRANSITION CARDS ─────────────────────────────────────── */
+    .t-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+    .t-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.22s, transform 0.18s;
+    }
+    .t-card:hover { border-color: var(--border-em); transform: translateY(-2px); }
+
+    .t-preview { height: 130px; position: relative; overflow: hidden; background: #090909; }
+    .scene-a, .scene-b {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #3a3a3a;
+    }
+    .scene-a { background: #111; z-index: 0; }
+    .scene-b { background: #091410; color: #1a5c44; z-index: 1; }
+
+    /* Striped Slam */
+    .prev-striped .scene-b { z-index: 1; }
+    .prev-striped .s-bar { position: absolute; left: -112%; right: -12%; z-index: 2; pointer-events: none; }
+    .prev-striped .s-bar.r { left: 12%; right: -112%; }
+    .prev-striped.go .s-bar   { animation: sLR 0.62s cubic-bezier(0.2,0,0,1) forwards; }
+    .prev-striped.go .s-bar.r { animation-name: sRL; }
+    @keyframes sLR { 0%{transform:translateX(0)} 48%{transform:translateX(112%)} 100%{transform:translateX(225%)} }
+    @keyframes sRL { 0%{transform:translateX(0)} 48%{transform:translateX(-112%)} 100%{transform:translateX(-225%)} }
+
+    /* Zoom Punch */
+    .prev-zoom .scene-b { opacity:0; transform:scale(0.86); z-index:2; }
+    .prev-zoom.go .scene-a { animation: zpOut 0.48s ease forwards; }
+    .prev-zoom.go .scene-b { animation: zpIn  0.48s ease forwards; }
+    @keyframes zpOut { to{opacity:0;transform:scale(1.08)} }
+    @keyframes zpIn  { to{opacity:1;transform:scale(1)}    }
+
+    /* Diagonal Reveal */
+    .prev-diag .scene-b { z-index:1; }
+    .d-cover { position:absolute; top:0; bottom:0; left:-12%; right:0; background:#090909; z-index:2; pointer-events:none; }
+    .d-skew  { position:absolute; top:-10%; bottom:-10%; left:-7%; width:10%; background:#090909; transform:skewX(-9deg); z-index:2; pointer-events:none; }
+    .d-line  { position:absolute; top:0; bottom:0; left:-0.5%; width:3px; background:var(--em); transform:skewX(-9deg); box-shadow:0 0 10px var(--em); z-index:3; pointer-events:none; }
+    .prev-diag.go .d-cover,
+    .prev-diag.go .d-skew,
+    .prev-diag.go .d-line { animation: dSweep 0.62s cubic-bezier(0.2,0,0.1,1) forwards; }
+    @keyframes dSweep { to { left:116%; } }
+
+    /* Emerald Burst */
+    .prev-burst .scene-b { opacity:0; z-index:1; }
+    .b-flash { position:absolute; inset:0; opacity:0; z-index:2; pointer-events:none;
+      background: radial-gradient(circle at 50% 50%, #fff 0%, var(--em) 18%, rgba(16,185,129,0.5) 40%, transparent 62%); }
+    .prev-burst.go .scene-a { animation: bOut   0.48s ease forwards; }
+    .prev-burst.go .scene-b { animation: bIn    0.48s 0.08s ease forwards; }
+    .prev-burst.go .b-flash { animation: bFlash 0.48s ease forwards; }
+    @keyframes bOut   { to{opacity:0} }
+    @keyframes bIn    { to{opacity:1} }
+    @keyframes bFlash { 0%{opacity:0} 14%{opacity:1} 80%{opacity:0} 100%{opacity:0} }
+
+    /* Vertical Shutter */
+    .prev-shutter .scene-b { z-index:1; }
+    .v-panel { position:absolute; top:0; bottom:0; z-index:2; transform:scaleX(0); transform-origin:left center; pointer-events:none; }
+    .prev-shutter.go .v-panel {
+      animation: vClose 0.3s cubic-bezier(0.2,0,0,1) forwards,
+                 vOpen  0.3s cubic-bezier(0.2,0,0,1) 0.3s forwards;
+    }
+    @keyframes vClose { to  {transform:scaleX(1)} }
+    @keyframes vOpen  { from{transform:scaleX(1)} to{transform:scaleX(0)} }
+
+    /* Glitch Slam */
+    .prev-glitch .scene-b { opacity:0; z-index:1; }
+    .g-strip { position:absolute; left:0; right:0; z-index:2; opacity:0; pointer-events:none; mix-blend-mode:screen; }
+    .prev-glitch.go .scene-a { animation: gShake 0.52s ease forwards; }
+    .prev-glitch.go .scene-b { animation: gPop   0.52s 0.07s ease forwards; }
+    .prev-glitch.go .g-strip { animation: gStrip 0.52s ease forwards; }
+    @keyframes gShake { 0%{transform:translateX(0);opacity:1} 14%{transform:translateX(18px)} 30%{transform:translateX(-14px)} 50%{transform:translateX(8px);opacity:0.5} 100%{transform:translateX(0);opacity:0} }
+    @keyframes gPop   { 0%{opacity:0;transform:scale(1.05)} 16%{opacity:1} 100%{transform:scale(1);opacity:1} }
+    @keyframes gStrip { 0%{opacity:0} 20%{opacity:1} 74%{opacity:0.5} 100%{opacity:0} }
+
+    .t-info  { padding: 16px 18px 20px; }
+    .t-name  { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 5px; }
+    .t-desc  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--sub); line-height: 1.65; margin-bottom: 12px; }
+    .t-tag   { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--em); background: var(--em-dim); border: 1px solid rgba(16,185,129,0.15); border-radius: 4px; padding: 3px 9px; }
+
+    /* ─── REF CARDS ────────────────────────────────────────────── */
+    .ref-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; transition: border-color 0.22s; }
+    .ref-card:hover { border-color: var(--border-em); }
+    .ref-icon  { width: 40px; height: 40px; border-radius: 10px; background: var(--em-dim); border: 1px solid var(--border-em); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; }
+    .ref-file  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--em); margin-bottom: 8px; }
+    .ref-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 9px; }
+    .ref-desc  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--sub); line-height: 1.7; }
+
+    /* ─── INSTALL ──────────────────────────────────────────────── */
+    .install-bg {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .install-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 88px 56px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+    }
+    .install-sub { font-size: 16px; color: var(--sub); line-height: 1.7; margin-bottom: 32px; }
+    .methods { display: flex; flex-direction: column; gap: 12px; }
+    .method { border: 1px solid var(--border); border-radius: 10px; padding: 15px 18px; background: rgba(255,255,255,0.018); transition: border-color 0.2s; }
+    .method:hover { border-color: var(--border-em); }
+    .m-lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--em); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px; }
+    .m-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .m-cmd { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--white); flex: 1; }
+    .m-copy { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--sub); background: transparent; border: none; cursor: pointer; transition: color 0.18s; flex-shrink: 0; }
+    .m-copy:hover { color: var(--em); }
+    .m-copy.ok { color: var(--em); }
+    .m-link { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--em); text-decoration: none; flex-shrink: 0; }
+
+    /* ─── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 24px 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .foot-logo { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--sub); }
+    .foot-logo b { color: var(--em); font-weight: 400; }
+    .foot-links { display: flex; gap: 24px; }
+    .foot-links a { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--dim); text-decoration: none; transition: color 0.18s; }
+    .foot-links a:hover { color: var(--sub); }
+
+    /* ─── ANIMATIONS ───────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ───────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .hero { grid-template-columns: 1fr; gap: 48px; padding: 72px 40px 64px; }
+      .hero-sub { max-width: 100%; }
+      .install-pill { max-width: 100%; }
+    }
+    @media (max-width: 900px) {
+      nav { padding: 0 24px; }
+      .sec { padding: 64px 24px; }
+      .t-grid { grid-template-columns: 1fr 1fr; }
+      .ref-grid { grid-template-columns: 1fr; }
+      .install-inner { grid-template-columns: 1fr; padding: 64px 24px; }
+      .stats .stat-lbl { display: none; }
+      footer { flex-direction: column; gap: 16px; text-align: center; padding: 20px 24px; }
+    }
+    @media (max-width: 600px) {
+      nav { height: 52px; }
+      .nav-links a:not(.btn-em) { display: none; }
+      .hero { padding: 56px 20px 48px; }
+      .t-grid { grid-template-columns: 1fr; }
+      .stats { flex-wrap: wrap; }
+      .stat { min-width: 50%; }
+      .install-pill { flex-direction: column; }
+      .pill-label, .pill-cmd, .pill-copy { border: none; border-bottom: 1px solid var(--border); width: 100%; }
+      .pill-copy { border-bottom: none; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">remotion<b>-transitions</b></a>
+  <div class="nav-links">
+    <a href="#transitions">Transitions</a>
+    <a href="#references">References</a>
+    <a href="https://github.com/Ashad001/remotion-transitions" target="_blank">GitHub</a>
+    <a href="#install" class="btn-em">Install →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div style="position:relative;z-index:1;">
+  <div class="hero">
+    <div class="hero-left">
+      <p class="eyebrow">Claude Code Skill · Remotion</p>
+
+      <h1>Build Remotion<br>transitions that<br>feel <em>alive.</em></h1>
+
+      <p class="hero-sub">
+        TransitionPresentation API, animation math, spring configs, and a
+        catalog of production-ready patterns — for anyone building short-form video with Claude.
+      </p>
+
+      <div class="install-pill">
+        <span class="pill-label">skills.sh</span>
+        <span class="pill-cmd" id="hero-cmd">npx skills add Ashad001/remotion-transitions</span>
+        <button class="pill-copy" onclick="cp('hero-cmd',this)">copy</button>
+      </div>
+
+      <p class="hero-meta">MIT · works with Claude Code, Cursor, Copilot, Gemini CLI + 36 more</p>
+    </div>
+
+    <div class="hero-right">
+      <div class="terminal">
+        <div class="term-bar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <span class="term-title">terminal</span>
+        </div>
+        <div class="term-body">
+          <div><span class="tp">$ </span><span class="tc">npx skills add Ashad001/remotion-transitions</span></div>
+          <div class="to">Fetching skill...</div>
+          <div class="to">Installing remotion-transitions...</div>
+          <div class="ts">✓ Installed successfully</div>
+          <div>&nbsp;</div>
+          <div><span class="tp">$ </span><span class="tc">claude "add a striped slam transition between SceneA and SceneB"</span></div>
+          <div class="to">Reading remotion-transitions...</div>
+          <div class="to">Generating TransitionPresentation...</div>
+          <div class="ts">✓ Done — 44 lines written.</div>
+          <div><span class="tp">$ </span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-val">6</div><div class="stat-lbl">Transitions</div></div>
+  <div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Reference guides</div></div>
+  <div class="stat"><div class="stat-val">40+</div><div class="stat-lbl">AI agents</div></div>
+  <div class="stat"><div class="stat-val">MIT</div><div class="stat-lbl">License</div></div>
+</div>
+
+<!-- TRANSITIONS -->
+<div class="sec" id="transitions">
+  <p class="sec-eyebrow">The catalog</p>
+  <h2 class="sec-title">Every transition, ready to use or extend.</h2>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sub);margin-top:-32px;margin-bottom:36px;">Hover each card to preview the effect.</p>
+
+  <div class="t-grid">
+
+    <div class="t-card">
+      <div class="t-preview prev-striped" id="ps">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Striped Slam</div>
+        <div class="t-desc">Alternating bars slam from both sides, cover the scene, then retract.</div>
+        <span class="t-tag">Opening cuts · Max energy</span>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-preview prev-zoom" id="pz">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Zoom Punch</div>
+        <div class="t-desc">Old scene retreats; new punches in from 0.86× with cubic ease-in-out.</div>
+        <span class="t-tag">Mid-sequence · Camera energy</span>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-preview prev-diag" id="pd">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+        <div class="d-cover"></div><div class="d-skew"></div><div class="d-line"></div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Diagonal Reveal</div>
+        <div class="t-desc">Skewed dark panel sweeps left→right with a glowing emerald accent line.</div>
+        <span class="t-tag">Cinematic · Reveals</span>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-preview prev-burst" id="pb">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+        <div class="b-flash"></div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Emerald Burst</div>
+        <div class="t-desc">Sharp radial flash peaks at the cut, clears in 20% of transition duration.</div>
+        <span class="t-tag">Product moments · Impact</span>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-preview prev-shutter" id="psh">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Vertical Shutter</div>
+        <div class="t-desc">Venetian blind: N panels close over old scene, snap open on new one.</div>
+        <span class="t-tag">Graphic · Stop-motion</span>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-preview prev-glitch" id="pg">
+        <div class="scene-a">SCENE A</div>
+        <div class="scene-b">SCENE B</div>
+        <div class="g-strip" style="top:18%;height:4%;background:rgba(239,68,68,0.65)"></div>
+        <div class="g-strip" style="top:38%;height:2%;background:rgba(16,185,129,0.65)"></div>
+        <div class="g-strip" style="top:58%;height:5%;background:rgba(59,130,246,0.6)"></div>
+        <div class="g-strip" style="top:77%;height:2%;background:rgba(255,255,255,0.45)"></div>
+      </div>
+      <div class="t-info">
+        <div class="t-name">Glitch Slam</div>
+        <div class="t-desc">Horizontal shake decay + RGB-offset strip tears on exit. Hard pop on enter.</div>
+        <span class="t-tag">Final cuts · CTA · Chaos</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REFERENCES -->
+<div class="sec" id="references" style="padding-top:0">
+  <p class="sec-eyebrow">What's inside</p>
+  <h2 class="sec-title">Three guides. Everything you need.</h2>
+  <div class="ref-grid">
+    <div class="ref-card">
+      <div class="ref-icon">⚙️</div>
+      <div class="ref-file">custom-transition-pattern.md</div>
+      <div class="ref-title">The API Pattern</div>
+      <div class="ref-desc">Full TransitionPresentation scaffold, linearTiming vs springTiming, stagger formula, frame budget math, and common gotchas.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-icon">📖</div>
+      <div class="ref-file">transition-catalog.md</div>
+      <div class="ref-title">Transition Catalog</div>
+      <div class="ref-desc">Complete TypeScript source for all transitions, each with customization tips — strip count, easing, brand colors.</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-icon">∫</div>
+      <div class="ref-file">animation-math.md</div>
+      <div class="ref-title">Animation Math</div>
+      <div class="ref-desc">Easing functions, decaying oscillation, spring configs, the clamp pattern, and responsive 9:16 scaling.</div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL -->
+<div class="install-bg" id="install">
+  <div class="install-inner">
+    <div>
+      <p class="sec-eyebrow">Get started</p>
+      <h2 class="sec-title" style="margin-bottom:16px">One command.<br>Works everywhere.</h2>
+      <p class="install-sub">
+        Compatible with Claude Code, Cursor, GitHub Copilot, Gemini CLI,
+        Windsurf, and 35+ more via the open Agent Skills standard.
+      </p>
+      <div class="methods">
+        <div class="method">
+          <div class="m-lbl">via skills.sh</div>
+          <div class="m-row">
+            <span class="m-cmd" id="c1">npx skills add Ashad001/remotion-transitions</span>
+            <button class="m-copy" onclick="cp('c1',this)">copy</button>
+          </div>
+        </div>
+        <div class="method">
+          <div class="m-lbl">via Claude Code plugin</div>
+          <div class="m-row">
+            <span class="m-cmd" id="c2">/plugin install remotion-transitions</span>
+            <button class="m-copy" onclick="cp('c2',this)">copy</button>
+          </div>
+        </div>
+        <div class="method">
+          <div class="m-lbl">Source</div>
+          <div class="m-row">
+            <span class="m-cmd">github.com/Ashad001/remotion-transitions</span>
+            <a href="https://github.com/Ashad001/remotion-transitions" target="_blank" class="m-link">open →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+        <span class="term-title">Installing the skill</span>
+      </div>
+      <div class="term-body">
+        <div><span class="tp">$ </span><span class="tc">npx skills add Ashad001/remotion-transitions</span></div>
+        <div class="to">Fetching skill...</div>
+        <div class="ts">✓ remotion-transitions installed</div>
+        <div>&nbsp;</div>
+        <div><span class="tp">$ </span><span class="tc">claude "build a glitch slam transition with RGB tears"</span></div>
+        <div class="to">Skill: remotion-transitions loaded</div>
+        <div class="to">Reading transition-catalog.md...</div>
+        <div class="to">Reading animation-math.md...</div>
+        <div class="ts">✓ TransitionPresentation written — 52 lines.</div>
+        <div><span class="tp">$ </span><span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">remotion<b>-transitions</b> · v1.0.0 · MIT</div>
+  <div class="foot-links">
+    <a href="https://github.com/Ashad001/remotion-transitions" target="_blank">GitHub</a>
+    <a href="https://skills.sh" target="_blank">skills.sh</a>
+    <a href="https://remotion.dev/docs/transitions" target="_blank">Remotion docs</a>
+    <a href="https://agentskills.io" target="_blank">Agent Skills</a>
+  </div>
+</footer>
+
+<script>
+  function cp(id, btn) {
+    navigator.clipboard.writeText(document.getElementById(id).textContent.trim()).then(() => {
+      const o = btn.textContent;
+      btn.textContent = 'copied!'; btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = o; btn.classList.remove('ok'); }, 1800);
+    });
+  }
+
+  // Generate striped bars
+  const ps = document.getElementById('ps');
+  for (let i = 0; i < 8; i++) {
+    const b = document.createElement('div');
+    b.className = 's-bar' + (i % 2 ? ' r' : '');
+    Object.assign(b.style, {
+      top: `${i * 12.5}%`, height: '13%',
+      background: i % 2 === 0 ? '#0a0a0a' : '#10b981',
+      opacity: i % 2 === 0 ? '1' : '0.75',
+      animationDelay: `${i * 0.033}s`,
+    });
+    ps.appendChild(b);
+  }
+
+  // Generate shutter panels
+  const psh = document.getElementById('psh');
+  for (let i = 0; i < 7; i++) {
+    const p = document.createElement('div');
+    p.className = 'v-panel';
+    Object.assign(p.style, {
+      left: `${i * (100/7)}%`, width: `${100/7 + 0.5}%`,
+      background: i % 2 === 0 ? '#0a0a0a' : '#10b981',
+      opacity: i % 2 === 0 ? '1' : '0.7',
+      animationDelay: `${i * 0.026}s, ${0.3 + i * 0.026}s`,
+    });
+    psh.appendChild(p);
+  }
+
+  // Hover → replay animation
+  document.querySelectorAll('.t-card').forEach(card => {
+    const preview = card.querySelector('.t-preview');
+    card.addEventListener('mouseenter', () => {
+      preview.classList.remove('go');
+      void preview.offsetWidth;
+      preview.classList.add('go');
+    });
+  });
+</script>
+
+</body>
+</html>
