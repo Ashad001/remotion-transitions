@@ -1,0 +1,13 @@
+{
+  "name": "remotion-transitions",
+  "description": "Build custom Remotion scene transitions using the TransitionPresentation API — animation math, stagger formulas, spring configs, frame budget guidance, and a catalog of production-ready patterns for short-form video.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ashad",
+    "url": "https://github.com/ashad001"
+  },
+  "repository": "https://github.com/ashad001/remotion-transitions",
+  "homepage": "https://github.com/ashad001/remotion-transitions#readme",
+  "license": "MIT",
+  "keywords": ["remotion", "transitions", "video", "react", "animation", "claude-code", "claude-plugin", "short-form-video", "instagram-reels", "motion-design", "typescript", "tiktok"]
+}
